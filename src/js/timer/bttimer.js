@@ -4,12 +4,25 @@ execMain(function(timer) {
 
 	var enable = false;
 	var inspectionTime = 0;
+	var firstEventReceived = false;
 
 	function onQiyiTimerEvent(timerEvent) {
 		if (!enable)
 			return;
 		DEBUG && console.log('[qiyitimer] timer event received', timerEvent);
 		var CONST = BluetoothTimer.CONST;
+
+		if (!firstEventReceived) { // first event received after connection, set hardTime to received time
+			firstEventReceived = true;
+			timer.hardTime(timerEvent.solveTime);
+			timer.lcd.reset();
+			timer.lcd.renderUtil();
+			timer.lcd.fixDisplay(false, true);
+			if (timerEvent.state != CONST.IDLE) {
+				alert(BTTIMER_TIMER_NOT_IDLE);
+			}
+		}
+
 		switch (timerEvent.state) {
 			case CONST.HANDS_ON: // both hands placed on timer
 				timer.lcd.color('r');
@@ -20,7 +33,7 @@ execMain(function(timer) {
 			case CONST.GAN_RESET: // timer reset button pressed
 			case CONST.IDLE: // timer reset button pressed
 				inspectionTime = 0;
-				if (timer.hardTime() > 0 || timer.status() != -1) { // reset timer / cancel inspection timer
+				if (timer.hardTime() > 0 || timer.status() != -1 && timer.status() != -3 && timer.status() != -4) { // reset timer / cancel inspection timer
 					timer.hardTime(0);
 					timer.status(-1);
 					timer.lcd.reset();
@@ -76,7 +89,8 @@ execMain(function(timer) {
 		BluetoothTimer.setCallback(onQiyiTimerEvent);
 		BluetoothTimer.init().then(function () {
 			DEBUG && console.log('[qiyitimer] timer device successfully connected');
-			timer.hardTime(0);
+			firstEventReceived = false;
+			timer.hardTime(1); // set hardTime to block inspection (in case of not 0 time on physical timer) and set corret time after first event received
 			timer.status(-1);
 			timer.lcd.reset();
 			timer.lcd.renderUtil();
