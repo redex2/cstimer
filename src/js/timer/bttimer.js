@@ -94,7 +94,7 @@ execMain(function(timer) {
 		BluetoothTimer.init().then(function () {
 			DEBUG && console.log('[qiyitimer] timer device successfully connected');
 			firstEventReceived = false;
-			timer.hardTime(1); // set hardTime to block inspection (in case of not 0 time on physical timer) and set corret time after first event received
+			timer.hardTime(1); // set hardTime to block inspection (in case of not 0 time on physical timer) and set correct time after first event received
 			timer.status(-1);
 			timer.lcd.reset();
 			timer.lcd.renderUtil();
