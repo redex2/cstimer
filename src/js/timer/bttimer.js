@@ -54,19 +54,23 @@ execMain(function(timer) {
 					// 0 == Normal, 2000 == +2, -1 == DNF
 					inspectionTime = timer.checkUseIns() ? inspectionTime > 17000 ? -1 : (inspectionTime > 15000 ? 2000 : 0) : 0;
 				}
-				timer.startTime($.now() - ~~timerEvent.solveTime);
-				timer.lcd.reset();
-				timer.curTime([inspectionTime]);
-				timer.status(1);
-				timer.lcd.fixDisplay(false, true);
+				if(timer.status() == 1 || timer.hardTime() == 0) { // should always be true, but communication errors sometimes occur, resulting in duplicate results.
+					timer.startTime($.now() - ~~timerEvent.solveTime);
+					timer.lcd.reset();
+					timer.curTime([inspectionTime]);
+					timer.status(1);
+					timer.lcd.fixDisplay(false, true);
+				}
 				break;
 			case CONST.STOPPED: // timer is stopped, recorded time returned from timer
-				timer.hardTime(timerEvent.solveTime);
-				timer.curTime()[1] = timer.hardTime();
-				timer.status(-1);
-				timer.lcd.renderUtil();
-				timer.lcd.fixDisplay(false, true);
-				kernel.pushSignal('time', timer.curTime());
+				if(timer.status() == 1) { // if timer was running, record solve time – error protection as above
+					timer.hardTime(timerEvent.solveTime);
+					timer.curTime()[1] = timer.hardTime();
+					timer.status(-1);
+					timer.lcd.renderUtil();
+					timer.lcd.fixDisplay(false, true);
+					kernel.pushSignal('time', timer.curTime());
+				}
 				break;
 			case CONST.DISCONNECT: // timer is switched off or something else
 				timer.hardTime(null);
